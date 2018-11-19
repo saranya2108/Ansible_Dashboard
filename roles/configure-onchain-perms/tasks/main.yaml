@@ -1,0 +1,66 @@
+---
+- name: "Copy Network keys"
+  copy:
+    src: keys/{{ network_name }}/networkkeys
+    dest: /tmp/networkkeys
+    remote_src: no
+  become: yes
+
+- name: "Copy Transactor keys"
+  copy:
+    src: keys/{{ network_name }}/transactorkeys
+    dest: /tmp/transactorkeys
+    remote_src: no
+  become: yes
+
+- name: "permissions for /etc/sawtooth"
+  shell: "sudo chmod 777 -R /etc/sawtooth"
+  become: yes
+
+- name: "permissions for /home/sawtooth"
+  shell: "sudo chmod 777 -R /home/sawtooth"
+  become: yes
+
+- name: "Set Role Key"
+  shell:
+     sudo sawset proposal create --key /etc/sawtooth/keys/validator.priv sawtooth.identity.allowed_keys=$(cat ~/.sawtooth/keys/user1.pub) --url http://{{ api_endpoint }}
+  args:
+    creates: "~/.sawtooth/onchain-configured"
+  become: yes
+  become_user: ansible
+
+- name: "Create Transaction Access Policy"
+  shell: sudo sawtooth identity policy create -k ~/.sawtooth/keys/user1.priv --url http://{{ api_endpoint }} user1 "PERMIT_KEY $(cat ~/.sawtooth/keys/user1.pub)"
+  args:
+    creates: "~/.sawtooth/onchain-configured"
+  become: yes
+  become_user: ansible
+
+- name: "Create Identity Role"
+  shell: sawtooth identity role create transactor user1 --url http://{{ api_endpoint }}
+  args:
+    creates: "/home/ansible/.sawtooth/onchain-configured"
+  become: yes
+  become_user: ansible
+
+- name: "Create Network Role"
+  shell: sawtooth identity role create network policy_2 --wait 300 --url http://{{ api_endpoint }}
+  args:
+    creates: "/home/ansible/.sawtooth/onchain-configured"
+  become: yes
+  become_user: ansible
+
+- name: "permissions for onchain-configured"
+  shell: "sudo chmod 777 /home/ansible/.sawtooth/onchain-configured"
+  become: yes
+
+- name: "Create onchain-configured"
+  file:
+    path: /home/ansible/.sawtooth/onchain-configured
+    state: file 
+    owner: root
+    group: root
+    mode: 0777
+  become: yes
+
+
