@@ -1,0 +1,16 @@
+{
+    "groups": {
+        "EC2": [
+            "node.sawtooth.com"
+        ], 
+        "EC2_launched": [
+            "35.170.203.203"
+        ], 
+        "all": [
+            "node.sawtooth.com", 
+            "35.170.203.203"
+        ], 
+        "ungrouped": []
+    }
+}
+

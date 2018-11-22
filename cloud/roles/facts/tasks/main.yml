@@ -1,0 +1,32 @@
+---
+
+- set_fact: # Get current inventory name in order to add new EC2 host to the proper inventory
+    inventory: "{{ inventory_file.split('/') | max }}"
+
+- debug: msg="Loading {{ inventory }} inventory"
+
+
+- name: Gathering facts from ec2
+  ec2_instance_facts:
+     aws_access_key: AKIAJLLW4EVRBRVCANAQ
+     aws_secret_key: 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	
+     region: "us-east-1"
+     filters:
+       "tag:Name": BCGT_BLOCKCHAIN_ANSIBLE_CLOUD-NODE
+  register: ec2_data
+- debug: msg="{{ ec2_data.instances }}"
+- name: Instance public ip
+#  debug:
+#    msg: "{{ item.public_ip_address }}"
+#  with_items: "{{ ec2_data.instances }}"
+  debug: msg="{{ ec2_data.instances[0].public_ip_address }}"
+
+
+- name: Add newly created instances to the hosts for the next play
+  add_host:
+    name: "{{ item.public_ip_address }}"
+    groupname: EC2_launched
+  with_items: "{{ ec2_data.instances }}"
+
+- debug: var=groups
+- debug: var={{ inventory }}

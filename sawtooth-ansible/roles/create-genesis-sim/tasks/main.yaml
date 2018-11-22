@@ -1,0 +1,55 @@
+---
+- name: "Create Config Genesis Batch"
+  command: "sawset genesis -k /etc/sawtooth/keys/validator.priv -o config-genesis.batch"
+  args:
+    creates: "config-genesis.batch"
+  become: yes
+  become_user: ansible
+
+- name: "Set Consensus Algorithm"
+  shell: >
+          sawset proposal create -k /etc/sawtooth/keys/validator.priv
+          sawtooth.consensus.algorithm=poet
+          sawtooth.poet.report_public_key_pem="$(cat /etc/sawtooth/simulator_rk_pub.pem)"
+          sawtooth.poet.valid_enclave_measurements=$(poet enclave measurement)
+          sawtooth.poet.valid_enclave_basenames=$(poet enclave basename)
+          -o config.batch
+  args:
+    creates: "config.batch"
+  become: yes
+  become_user: ansible
+
+- name: "PoET settings"
+  shell: >
+          sawset proposal create -k /etc/sawtooth/keys/validator.priv
+          sawtooth.poet.target_wait_time=15
+          sawtooth.poet.initial_wait_time=15
+          sawtooth.publisher.max_batches_per_block=500
+          sawtooth.poet.ztest_minimum_win_count=10000
+          sawtooth.poet.key_block_claim_limit=100000
+          -o poet_setting.batch
+  args:
+    creates: "poet_setting.batch"
+  become: yes
+  become_user: ansible
+
+- name: "Create Poet Genesis Batch"
+  command: "poet registration create -k /etc/sawtooth/keys/validator.priv -o poet.batch"
+  args:
+    creates: "poet.batch"
+  become: yes
+  become_user: ansible
+
+- name: "Run Sawtooth Genesis"
+  shell: "sawadm genesis config-genesis.batch config.batch poet.batch poet_setting.batch && cp /var/lib/sawtooth/genesis.batch /home/ansible/genesis.batch"
+  args:
+    creates: "genesis.batch"
+  become: yes
+  become_user: ansible
+
+- name: "Generate User Keys"
+  shell: "sawtooth keygen"
+  args:
+    creates: "/home/sawtooth/.sawtooth/keys/sawtooth.priv"
+  become: yes
+  become_user: sawtooth

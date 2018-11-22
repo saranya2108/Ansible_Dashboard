@@ -1,0 +1,48 @@
+---
+- name: install pip
+  apt: name={{ item }} update_cache=yes state=present
+  with_items:
+  - python-pip
+
+- name: Install boto
+  pip: name=boto state=present
+
+- name: Install boto3
+  pip: name=boto3 state=present
+
+- name: Launching the AWS instance
+  ec2:
+    key_name: Ansible
+    region: us-east-1
+    instance_type: t2.micro
+    image: ami-059eeca93cf09eebd
+    group: launch-wizard-4
+    vpc_subnet_id: subnet-02d36a986335dd6b6
+    assign_public_ip: yes
+    count: 1
+    instance_tags:
+       Name: BCGT-BLOCKCHAIN-ANSIBLE-CLOUD-NODE
+    aws_access_key: AKIAJLLW4EVRBRVCANAQ
+    aws_secret_key: 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
+  register: ec2_info
+
+- name: The following instances have been launched
+  debug:
+    var: ec2_info
+
+- name: Wait for instance/s to come up
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22
+    search_regex: "OpenSSH"
+    timeout: 90
+    delay: 20
+  when: item.state == "pending"
+  with_items: "{{ ec2_info.instances }}"
+
+- name: Add newly created instances to the hosts for the next play
+  add_host:
+    name: "{{ item.public_ip }}"
+    groups: EC2_launched
+  when: item.state == "pending"
+  with_items: "{{ ec2_info.instances }}"
