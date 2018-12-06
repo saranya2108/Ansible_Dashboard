@@ -1,0 +1,15 @@
+---
+- hosts: "{{ play_hosts }}"
+  roles:
+    - fetch-keys
+  become: yes
+
+- hosts: 172.16.1.66
+  roles:
+    - format-keys
+  
+
+- hosts: "{{ play_hosts }}"
+  roles:
+    - configure-onchain-perms
+  become: yes

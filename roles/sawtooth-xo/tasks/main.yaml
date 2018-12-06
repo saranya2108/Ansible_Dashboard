@@ -1,0 +1,7 @@
+---
+- name: "Install Sawtooth-xo"
+  apt:
+    pkg=python3-sawtooth-xo
+    state=present
+    update_cache=true
+  become: yes

@@ -1,0 +1,13 @@
+---
+- hosts: "{{ play_hosts }}"
+  roles:
+    - sawtooth-block-info
+    - sawtooth-identity
+    - sawtooth-intkey-tp-go
+    - "sawtooth-poet-{{ enclave }}"
+    - sawtooth-rest-api
+    - sawtooth-settings
+    - sawtooth-smallbank-tp-go
+    - sawtooth-validator
+    - sawtooth-xo-tp-go
+  become: yes

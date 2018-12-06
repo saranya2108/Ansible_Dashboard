@@ -1,0 +1,81 @@
+---
+- name: "Copy Network keys"
+  copy:
+    src: keys/{{ network_name }}/networkkeys
+    dest: /tmp/networkkeys
+    remote_src: no
+  become: yes
+
+- name: "Copy Transactor keys"
+  copy:
+    src: keys/{{ network_name }}/transactorkeys
+    dest: /tmp/transactorkeys
+    remote_src: no
+  become: yes
+
+- name: "permissions for /etc/sawtooth"
+  shell: "sudo chmod 777 -R /etc/sawtooth"
+  become: yes
+
+- name: "permissions for /home/sawtooth"
+  shell: "sudo chmod 777 -R /home/sawtooth"
+  become: yes
+
+- name: "Set Role Key"
+  shell:
+     sawset proposal create --key /etc/sawtooth/keys/validator.priv --url http://{{ api_endpoint }}
+     sawtooth.identity.allowed_keys=$(cat /home/sawtooth/.sawtooth/keys/sawtooth.pub)
+  args:
+    creates: "/home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+ 
+- name: "Create Transaction Access Policy"
+  shell: sudo sawtooth identity policy create -k /home/sawtooth/.sawtooth/keys/sawtooth.priv --url http://172.16.1.111:8008 sample11 "PERMIT_KEY /tmp/transactorkeys/transactorkeys/172.16.1.99" 
+  become: yes
+ 
+- name: "Create Network Access Policy"
+  shell:
+    echo sawtooth identity policy create policy_2 "$(cat /tmp/networkkeys/networkkeys/{{ play_hosts }}/validator.pub)"  \"DENY_KEY *\" --wait 300 --url http://{{ api_endpoint }} >/tmp/networkpolicy.sh
+  args:
+    creates: "/home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+  become_user: sawtooth
+
+- name: "permissions for networkpolicy.sh"
+  shell: "sudo chmod 777 /tmp/networkpolicy.sh"
+  become: yes
+
+- name: "Apply Network Access Policy"
+  shell: sh /tmp/networkpolicy.sh
+  args:
+    creates: "/home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+
+- name: "Create Identity Role"
+  shell: sawtooth identity role create transactor policy_1 --wait 300 --url http://{{ api_endpoint }}
+  args:
+    creates: "/home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+  become_user: sawtooth
+
+- name: "Create Network Role"
+  shell: sawtooth identity role create network policy_2 --wait 300 --url http://{{ api_endpoint }}
+  args:
+    creates: "/home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+  become_user: sawtooth
+
+- name: "permissions for onchain-configured"
+  shell: "sudo chmod 777 /home/sawtooth/.sawtooth/onchain-configured"
+  become: yes
+
+- name: "Create onchain-configured"
+  file:
+    path: /home/sawtooth/.sawtooth/onchain-configured
+    state: file 
+    owner: root
+    group: root
+    mode: 0764
+  become: yes
+
+
