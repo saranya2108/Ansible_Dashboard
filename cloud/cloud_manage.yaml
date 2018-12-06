@@ -1,6 +1,0 @@
----
-- hosts: "{{ play_hosts }}"
-  roles:
-    - facts
-  become: yes
-  remote_user: ansible
