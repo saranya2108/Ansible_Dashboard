@@ -1,6 +1,0 @@
----
-dependencies:
-  - { role: addrepo }
-  - { role: sgx-driver }
-  - { role: sawtooth-cli }
-  - { role: sawtooth-poet-sgx }

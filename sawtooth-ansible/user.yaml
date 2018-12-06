@@ -1,5 +1,0 @@
----
-- hosts: "{{ play_hosts }}"
-  roles:
-    - user-policy
-  become: yes
