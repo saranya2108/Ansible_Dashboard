@@ -4,7 +4,7 @@
   args:
     creates: "config-genesis.batch"
   become: yes
-  become_user: ansible
+  become_user: ansible-user
 
 - name: "Set Consensus Algorithm"
   shell: >
@@ -17,7 +17,7 @@
   args:
     creates: "config.batch"
   become: yes
-  become_user: ansible
+  become_user: ansible-user
 
 - name: "PoET settings"
   shell: >
@@ -31,21 +31,21 @@
   args:
     creates: "poet_setting.batch"
   become: yes
-  become_user: ansible
+  become_user: ansible-user
 
 - name: "Create Poet Genesis Batch"
   command: "poet registration create -k /etc/sawtooth/keys/validator.priv -o poet.batch"
   args:
     creates: "poet.batch"
   become: yes
-  become_user: ansible
+  become_user: ansible-user
 
 - name: "Run Sawtooth Genesis"
   shell: "sawadm genesis config-genesis.batch config.batch poet.batch poet_setting.batch && cp /var/lib/sawtooth/genesis.batch /home/ansible/genesis.batch"
   args:
     creates: "genesis.batch"
   become: yes
-  become_user: ansible
+  become_user: ansible-user
 
 - name: "Generate User Keys"
   shell: "sawtooth keygen"
